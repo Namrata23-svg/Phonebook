@@ -10,6 +10,7 @@ import DialogContent from '@mui/joy/DialogContent';
 import Stack from '@mui/joy/Stack';
 import Add from '@mui/icons-material/Add';
 import { List, ListItem, ListItemText, TextField } from "@mui/material";
+import ScienceIcon from '@mui/icons-material/Science';
 import { useEffect } from "react";
 import SearchIcon from '@mui/icons-material/Search';
 import Card from '@mui/joy/Card';
@@ -26,6 +27,10 @@ function Home(){
   const[projects,setProjects]=useState([])
     const[phoneError,setPhoneError]=useState("")
   const[nameError,setNameError]=useState("")
+const[bookmarked,setBookmarked]=useState([])
+const[contacts,setContacts]=useState([])
+const[labelFilter,setLabelFilter]=useState("")
+const[label,setLabel]=useState("")
 
   const validatePhoneNumber = (phone) => {
     const phoneRegex = /^[0-9]{10}$/; 
@@ -59,13 +64,31 @@ setNameError("Not Valid")
     setNameError("")
   }}
 
+  const bookMark=(index)=>{
+    setBookmarked((prev)=>{
+      if(prev.includes(index)){
+    return prev.filter((id)=>id!=index)
+    
+      }
+      console.log("bookmarked")
+      return[...prev,index]
+    })
+  }
+
   const handleSubmit=(e)=>{
       e.preventDefault();
-      
-      const newProject = { name, phone, address, avatar };
+      console.log("submitted")
+      const newProject={
+        id:Date.now(),
+        name,
+        phone,
+        label:setLabel
+      }
+      // setContacts([...contacts,newContact])
+      // const newProject = { name, phone, address, avatar };
       setProjects((prevProjects) => {
-        const updatedProjects = [...prevProjects, newProject];
-        localStorage.setItem('projects', JSON.stringify(updatedProjects)); 
+       const updatedProjects= [...prevProjects, newProject];
+        localStorage.setItem("projects", JSON.stringify(updatedProjects)); 
         return updatedProjects;
       });
      setOpen(false)
@@ -76,10 +99,15 @@ setNameError("Not Valid")
       setProjects(storedProjects);
          
        }, []);
+
+      
     
-       const filteredProjects = projects.filter((project) =>
-        project.name.toLowerCase().includes(search.toLowerCase())
-      );
+       const filteredProjects = projects.filter((project) => {
+       
+        
+        
+        return project.name.toLowerCase().includes(search.toLowerCase());
+      });
       
     
   const Edit = (index) => {
@@ -106,17 +134,22 @@ setNameError("Not Valid")
   };
   
 
-  const handleOpenForm = () => {
-    setName("");
-    setPhone("");
-    setAddress("");
-    setOpen(true);
-  };
+
 
   const Delete = (index) => {
     const updatedProjects = projects.filter((_, i) => i !== index);
     setProjects(updatedProjects);
+   
   };
+
+  const showContactDetails = (project) => {
+    setContacts(project);
+    setOpen(true); 
+
+  const closeModal = () => {
+    setOpen(false); 
+    setContacts(null);
+  }};
 
     return(
         <>
@@ -139,6 +172,22 @@ setNameError("Not Valid")
            onChange={(e) => setSearch(e.target.value)}
           style={{ padding: "10px" }}
         />
+        <FormControl>
+                {/* <FormLabel>label</FormLabel> */}
+                <select
+                  value={labelFilter}
+                  onChange={(e) => setLabel(e.target.value)}
+                  style={{ padding: "5px" }}
+                >
+               <option value="Work">Work</option>
+            <option value="School">School</option>
+            <option value="Family">Family</option>
+            <option value="Friends">Friends</option>
+              </select>
+                
+              </FormControl>
+       
+      
       </div>
       <Modal open={open} onClose={() => setOpen(false)}>
         <ModalDialog>
@@ -179,25 +228,12 @@ setNameError("Not Valid")
                 value={address}
                 onChange={(e)=>setAddress(e.target.value)}
                 />
-              {/* <FormControl>
-                <FormLabel>Name</FormLabel>
-                <Input autoFocus required />
-              </FormControl> */}
-              {/* <FormControl>
-                <FormLabel>Avatar</FormLabel>
-                <Input autoFocus required />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Phone NUmber</FormLabel>
-                <Input autoFocus required />
-              </FormControl>
-              <FormControl>
-                <FormLabel>address</FormLabel>
-                <Input required />
-              </FormControl> */}
+            
               <FormControl>
                 <FormLabel>label</FormLabel>
-                <select>
+                <select
+                  
+                >
                <option value="Work">Work</option>
             <option value="School">School</option>
             <option value="Family">Family</option>
@@ -213,24 +249,44 @@ setNameError("Not Valid")
       </Modal>
 
       <List>
-  {filteredProjects.map((project, index) => (
-    <ListItem key={index}>
-      <ListItemText
+       
+  {filteredProjects.slice(0,10).map((project,index) => (
+    <ListItem key={project.id} >
+      <ListItemText style={{cursor:"pointer"}}onClick={(index)=>
+    
+    showContactDetails((project))}
       
         secondary={`Name:${project.name},Phone: ${project.phone}, Address: ${project.address}`}
       />
        <button onClick={() => Edit(index)}>Edit</button>
        <button onClick={()=>Delete(index)}> Delete</button>
 
-      
+       <button
+                onClick={() => bookMark(index)} 
+                style={{
+                  backgroundColor: bookmarked.includes(index)
+                    ? "yellow" 
+                    : "lightgray", 
+                }}
+              >
+                {bookmarked.includes(project.id) ? "⭐" : "☆"} 
+              </button>
       
     </ListItem>
   ))}
  
   </List>
   
+  
+      
+  
         </>
     )
 }
 
 export default Home;
+
+//- Render the contact in a tabular format as cards, as shown in reference image below.
+//- Clicking on any of the cards, all details of that particular contact should be shown in a modal.
+//- The contacts should be rendered in Alphabetical order of names.
+// Keep track of number of contacts in the phonebook.
