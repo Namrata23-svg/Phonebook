@@ -28,9 +28,11 @@ function Home(){
     const[phoneError,setPhoneError]=useState("")
   const[nameError,setNameError]=useState("")
 const[bookmarked,setBookmarked]=useState([])
-const[contacts,setContacts]=useState([])
+const[contacts,setContacts]=useState(null)
 const[labelFilter,setLabelFilter]=useState("")
 const[label,setLabel]=useState("")
+const[count,setCount]=useState(0);
+const[currentpage,setCurrentPage]=useState(1);
 
   const validatePhoneNumber = (phone) => {
     const phoneRegex = /^[0-9]{10}$/; 
@@ -42,7 +44,7 @@ const[label,setLabel]=useState("")
     setPhone(value);
   
   if (!validatePhoneNumber(value)) {
-    setPhoneError("Enter numeric value");
+    setPhoneError(" ");
   } else {
     setPhoneError("");
   }}
@@ -84,28 +86,35 @@ setNameError("Not Valid")
         phone,
         label:setLabel
       }
+      if(!newProject.name && !newProject.phone){
+        return;
+        
+      }
+      
       // setContacts([...contacts,newContact])
       // const newProject = { name, phone, address, avatar };
       setProjects((prevProjects) => {
-       const updatedProjects= [...prevProjects, newProject];
-        localStorage.setItem("projects", JSON.stringify(updatedProjects)); 
+       const updatedProjects= [ ...prevProjects,newProject];
+        // localStorage.setItem("projects", JSON.stringify(updatedProjects)); 
+        const contactProjects = updatedProjects.filter(project => project.type === "phone");
+        setCount(updatedProjects.length);
         return updatedProjects;
       });
      setOpen(false)
   }
 
     useEffect(() => {
-      const storedProjects = JSON.parse(localStorage.getItem('projects')) || [];
+      const storedProjects = JSON.parse(localStorage.getItem('projects')) ;
       setProjects(storedProjects);
+
+      const contactProjects = storedProjects.filter(project => project.type === "phone");
+    setCount(contactProjects.length);
          
        }, []);
 
       
     
        const filteredProjects = projects.filter((project) => {
-       
-        
-        
         return project.name.toLowerCase().includes(search.toLowerCase());
       });
       
@@ -138,7 +147,10 @@ setNameError("Not Valid")
 
   const Delete = (index) => {
     const updatedProjects = projects.filter((_, i) => i !== index);
+    const contactProjects = updatedProjects.filter(project => project.type === "phone");
+        setCount(contactProjects.length);
     setProjects(updatedProjects);
+    
    
   };
 
@@ -186,19 +198,35 @@ setNameError("Not Valid")
               </select>
                 
               </FormControl>
-       
+       <div>
+        <h2>Total count of contacts:{count}</h2>
+       </div>
       
       </div>
       <Modal open={open} onClose={() => setOpen(false)}>
         <ModalDialog>
-          <DialogTitle>Create new contact</DialogTitle>
+        <DialogTitle>{contacts ? "Contact Details" : isEditing ? "Edit Project" : "Create New Project"}</DialogTitle>
          
           <form
             onSubmit={handleSubmit}
           >
-            <Stack spacing={2}>
             
-              <label>Name:</label>
+            <Stack spacing={2}>
+
+            
+            
+            {contacts ? (
+                <>
+                  <h3>Project Details</h3>
+                  <p><strong>Name:</strong> {contacts.name}</p>
+                  <p><strong>Phone:</strong> {contacts.phone}</p>
+                  {/* <p><strong>Address:</strong> {contacts.address}</p>
+                  <p><strong>Avatar:</strong> {contacts.avatar}</p>
+                  <p><strong>Label:</strong> {contacts.label}</p> */}
+                </>
+              ) : (
+                <>
+                  <label>Name:</label>
                 <input
                 label="Name"
                 type="text"
@@ -242,6 +270,8 @@ setNameError("Not Valid")
                 
               </FormControl>
               <Button onClick={handleSubmit}>Submit</Button>
+              </>
+              )}
             </Stack>
           </form>
         </ModalDialog>
@@ -250,13 +280,13 @@ setNameError("Not Valid")
 
       <List>
        
-  {filteredProjects.slice(0,10).map((project,index) => (
+  {filteredProjects.map((project,index) => (
     <ListItem key={project.id} >
-      <ListItemText style={{cursor:"pointer"}}onClick={(index)=>
+      <ListItemText style={{cursor:"pointer"}}onClick={()=>
     
     showContactDetails((project))}
       
-        secondary={`Name:${project.name},Phone: ${project.phone}, Address: ${project.address}`}
+        secondary={`Name:${project.name},Phone: ${project.phone}, `}
       />
        <button onClick={() => Edit(index)}>Edit</button>
        <button onClick={()=>Delete(index)}> Delete</button>
@@ -269,7 +299,7 @@ setNameError("Not Valid")
                     : "lightgray", 
                 }}
               >
-                {bookmarked.includes(project.id) ? "⭐" : "☆"} 
+                {bookmarked.includes(index) ? "⭐" : "☆"} 
               </button>
       
     </ListItem>
